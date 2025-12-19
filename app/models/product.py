@@ -28,6 +28,7 @@ class Product(Base):
   isNew = Column(Boolean, default=False)
   # colors = Column(ARRAY(String))
   containers = Column(ARRAY(String)) #the packaging containers available for the spice
+  short_description = Column(String, nullable=True)
   description = Column(Text)
   status = Column(String)
   main_image = Column(String, nullable=True)

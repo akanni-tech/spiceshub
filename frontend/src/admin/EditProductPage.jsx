@@ -30,6 +30,7 @@ export function EditProductPage({productId ,onBack, onSave }) {
   const [productImages, setProductImages] = useState([]);
   const [product, setProduct] = useState({
     name: "",
+    short_description: "",
     description: "",
     price: "",
     originalPrice: "",
@@ -48,6 +49,7 @@ export function EditProductPage({productId ,onBack, onSave }) {
       
       setProduct({
         name: data.name || "",
+        short_description: data.short_description || "",
         description: data.description || "",
         price: data.price || "",
         originalPrice: data.originalPrice || "",
@@ -165,6 +167,17 @@ export function EditProductPage({productId ,onBack, onSave }) {
                   onChange={handleChange}
                   placeholder="Enter product name"
                   className="w-full px-3 py-2 bg-[#F0F0F0] border border-transparent rounded-md focus:border-[#99582A] focus:bg-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="short_description" className="block text-sm font-medium text-[#333333]">Short Description</label>
+                <textarea
+                  id="short_description"
+                  value={product.short_description}
+                  onChange={handleChange}
+                  placeholder="Describe your product..."
+                  className="w-full px-3 py-2 bg-[#F0F0F0] border border-transparent rounded-md focus:border-[#99582A] focus:bg-white min-h-32"
                 />
               </div>
 

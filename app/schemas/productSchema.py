@@ -27,6 +27,7 @@ class ProductBase(BaseModel):
     isSale: bool = False
     isNew: bool = False
     containers: Optional[List[str]] = Field(default_factory=list)
+    short_description: Optional[str] 
     description: Optional[str]
     images: Optional[List[str]] = Field(default_factory=list)
     status: Optional[str]
@@ -46,6 +47,7 @@ class ProductUpdate(BaseModel):
     originalPrice: Optional[float]
     stock: Optional[int]
     rating: Optional[float]
+    short_description: Optional[str] 
     reviewCount: Optional[int]
     isFeatured: Optional[bool]
     cost_per_item: Optional[float]

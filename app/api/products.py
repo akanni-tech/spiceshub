@@ -25,6 +25,7 @@ async def create_product(
     rating=product_in.rating,
     reviewCount=product_in.reviewCount,
     isSale=product_in.isSale,
+    short_description=product_in.short_description,
     description=product_in.description,
     isNew=product_in.isNew,
     containers=product_in.containers,
