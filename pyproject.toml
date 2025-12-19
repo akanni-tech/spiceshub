@@ -1,0 +1,20 @@
+[project]
+name = "ecommerce-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "alembic>=1.14.1",
+    "asyncpg>=0.30.0",
+    "celery>=5.5.3",
+    "fastapi>=0.121.1",
+    "pydantic[email]>=2.10.6",
+    "pydantic-settings>=2.8.1",
+    "python-dotenv>=1.0.1",
+    "redis>=6.1.1",
+    "uvicorn>=0.33.0",
+    "asyncio>=4.0.0",
+    "aioredis>=2.0.1",
+    "uuid>=1.30",
+]
