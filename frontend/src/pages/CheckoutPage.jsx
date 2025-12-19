@@ -139,9 +139,10 @@ export function CheckoutPage({ onNavigate }) {
         items: cartItems.map(item => ({
           product_id: item.product.id,
           quantity: item.quantity,
+          container: item.product.container || null,
           price: item.product.price,
-          size: item.size || null,
-          color: item.color || null
+          name: item.product.name || null,
+          image: item.product.main_image || null
         }))
       };
 
