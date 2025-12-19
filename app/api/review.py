@@ -40,7 +40,14 @@ async def create_review(review_in: ReviewCreate, db: AsyncSession = Depends(get_
   db.add(review)
   await db.commit()
   await db.refresh(review)
-  return review
+
+  # Reload review with relationships
+  result = await db.execute(
+    select(Review)
+    .where(Review.id == review.id)
+    .options(selectinload(Review.user), selectinload(Review.product))
+  )
+  return result.scalar_one()
 
 
 # GET ALL REVIEWS
@@ -85,7 +92,14 @@ async def update_review(review_id: str, review_in: ReviewCreate, db: AsyncSessio
   db.add(review)
   await db.commit()
   await db.refresh(review)
-  return review
+
+  # Reload review with relationships
+  result = await db.execute(
+    select(Review)
+    .where(Review.id == review.id)
+    .options(selectinload(Review.user), selectinload(Review.product))
+  )
+  return result.scalar_one()
 
 
 # DELETE REVIEW

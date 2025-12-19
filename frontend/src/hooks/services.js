@@ -113,6 +113,16 @@ export const getOrdersByUser = async (userId) => {
   return response.data;
 };
 
+export const createReview = async (reviewData) => {
+  const response = await api.post(`/reviews/reviews`, reviewData);
+  return response.data;
+};
+
+export const getReviewsForProduct = async (productId) => {
+  const response = await api.get(`/reviews/reviews/product/${productId}`);
+  return response.data;
+};
+
 export const getCustomers = async () => {
   const response = await api.get("/customers/customers");
   return response.data;
@@ -123,39 +133,78 @@ export const getOrders = async () => {
   return response.data;
 };
 
-// // guest endpoints
-// export async function getGuestCart() {
-//   const session_id = getSessionId();
-//   const res = await api.get(`/guest/guest-cart/${session_id}`);
-//   return res.data;
-// }
+// Guest Cart Services (localStorage based)
+export const getGuestCart = () => {
+  try {
+    const cart = localStorage.getItem('guest_cart');
+    return cart ? JSON.parse(cart) : { items: [] };
+  } catch (error) {
+    console.error('Error reading guest cart from localStorage:', error);
+    return { items: [] };
+  }
+};
 
-// export async function addToGuestCart(product_id, quantity = 1, size = null, color = null) {
-//   const session_id = getSessionId();
-//   const res = await api.post(`/guest/guest-cart/guest/add`, {
-//     session_id,
-//     items: [{ product_id, quantity, size, color }]
-//   });
-//   return res.data;
-// }
+export const saveGuestCart = (cart) => {
+  try {
+    localStorage.setItem('guest_cart', JSON.stringify(cart));
+  } catch (error) {
+    console.error('Error saving guest cart to localStorage:', error);
+  }
+};
 
-// export async function removeGuestCartItem(product_id) {
-//   const session_id = getSessionId();
-//   const res = await api.delete(`/guest/guest-cart/${session_id}/items/${product_id}`);
-//   return res.data;
-// }
+export const addToGuestCart = (product, quantity = 100, size = null, color = null) => {
+  const cart = getGuestCart();
+  const existingItemIndex = cart.items.findIndex(
+    item => item.product_id === product.id &&
+      item.size === size &&
+      item.color === color
+  );
 
-// export async function setGuestCartQuantity(product_id, quantity, size = null, color = null) {
-//   const session_id = getSessionId();
-//   const res = await api.patch(`/guest/guest-cart/quantity`, {
-//     session_id,
-//     product_id,
-//     quantity,
-//     size,
-//     color
-//   });
-//   return res.data;
-// }
+  if (existingItemIndex > -1) {
+    cart.items[existingItemIndex].quantity += quantity;
+  } else {
+    cart.items.push({
+      id: Date.now() + Math.random(), // temporary ID for localStorage
+      product_id: product.id,
+      product: product,
+      quantity: quantity,
+      size: size,
+      color: color,
+      price: product.price
+    });
+  }
+
+  saveGuestCart(cart);
+  return cart;
+};
+
+export const updateGuestCartItem = (itemId, quantity) => {
+  const cart = getGuestCart();
+  const itemIndex = cart.items.findIndex(item => item.id === itemId);
+
+  if (itemIndex > -1) {
+    if (quantity <= 0) {
+      cart.items.splice(itemIndex, 1);
+    } else {
+      cart.items[itemIndex].quantity = quantity;
+    }
+    saveGuestCart(cart);
+  }
+
+  return cart;
+};
+
+export const removeGuestCartItem = (itemId) => {
+  const cart = getGuestCart();
+  cart.items = cart.items.filter(item => item.id !== itemId);
+  saveGuestCart(cart);
+  return cart;
+};
+
+export const clearGuestCart = () => {
+  localStorage.removeItem('guest_cart');
+  return { items: [] };
+};
 
 
 // // AUTH CART (DB)
@@ -178,39 +227,95 @@ export const getOrders = async () => {
 // }
 
 
-// // GUEST WISHLIST ENDPOINTS
+// Guest Wishlist Services (localStorage based)
+export const getGuestWishlist = () => {
+  try {
+    const wishlist = localStorage.getItem('guest_wishlist');
+    return wishlist ? JSON.parse(wishlist) : { items: [] };
+  } catch (error) {
+    console.error('Error reading guest wishlist from localStorage:', error);
+    return { items: [] };
+  }
+};
 
-// export async function getGuestWishlist() {
-//   const session_id = getSessionId();
-//   const res = await api.get(`/guest/guest-wishlist/${session_id}`);
-//   return res.data;
-// }
+export const saveGuestWishlist = (wishlist) => {
+  try {
+    localStorage.setItem('guest_wishlist', JSON.stringify(wishlist));
+  } catch (error) {
+    console.error('Error saving guest wishlist to localStorage:', error);
+  }
+};
 
-// export async function addToGuestWishlist(product_id) {
-//   const session_id = getSessionId();
-//   const res = await api.post(`/guest/guest-wishlist/${session_id}/add/${product_id}`);
-//   return res.data;
-// }
+export const addToGuestWishlist = (product) => {
+  const wishlist = getGuestWishlist();
+  const existingItem = wishlist.items.find(item => item.product_id === product.id);
 
-// export async function removeGuestWishlistItem(product_id) {
-//   const session_id = getSessionId();
-//   const res = await api.delete(`/guest/guest-wishlist/${session_id}/items/${product_id}`);
-//   return res.data;
-// }
+  if (!existingItem) {
+    wishlist.items.push({
+      id: Date.now() + Math.random(), // temporary ID for localStorage
+      product_id: product.id,
+      product: product
+    });
+    saveGuestWishlist(wishlist);
+  }
 
-// export async function clearGuestWishlist() {
-//   const session_id = getSessionId();
-//   await api.delete(`/guest/guest-wishlist/${session_id}/clear`);
-// }
+  return wishlist;
+};
 
-// //MERGE FOR WISHLIST
-// export async function onLoginSuccess(user) {
-//   const session_id = getSessionId();
-//   await api.post(`/guest/guest-wishlist/merge/${session_id}/${user.id}`);
+export const removeGuestWishlistItem = (productId) => {
+  const wishlist = getGuestWishlist();
+  wishlist.items = wishlist.items.filter(item => item.product_id !== productId);
+  saveGuestWishlist(wishlist);
+  return wishlist;
+};
 
-//   // Then refresh local wishlist context
-//   refreshWishlist();
-// }
+export const clearGuestWishlist = () => {
+  localStorage.removeItem('guest_wishlist');
+  return { items: [] };
+};
+
+// Merge guest data to user account on login
+export const mergeGuestDataToUser = async (userId) => {
+  try {
+    // Get guest cart and wishlist
+    const guestCart = getGuestCart();
+    const guestWishlist = getGuestWishlist();
+
+    // Merge cart items
+    if (guestCart.items.length > 0) {
+      const cartPayload = {
+        user_id: userId,
+        items: guestCart.items.map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color
+        }))
+      };
+      await api.post('/carts/carts', cartPayload);
+    }
+
+    // Merge wishlist items
+    if (guestWishlist.items.length > 0) {
+      const wishlistPayload = {
+        user_id: userId,
+        items: guestWishlist.items.map(item => ({
+          product_id: item.product_id
+        }))
+      };
+      await api.post('/wishlists/wishlists/', wishlistPayload);
+    }
+
+    // Clear guest data after successful merge
+    clearGuestCart();
+    clearGuestWishlist();
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error merging guest data:', error);
+    return { success: false, error };
+  }
+};
 
 
 // // USER WISHLIST ENDPOINTS

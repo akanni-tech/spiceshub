@@ -31,6 +31,7 @@ export function AddProductPage({ onBack, onSave }) {
   const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState({
     name: '',
+    short_description: "",
     description: "",
     price: '',
     originalPrice: '',
@@ -86,6 +87,7 @@ export function AddProductPage({ onBack, onSave }) {
 
     const payload = {
       name: product.name,
+      short_description: product.short_description,
       description: product.description,
       price: parseFloat(product.price) || 0,
       originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
@@ -184,6 +186,17 @@ export function AddProductPage({ onBack, onSave }) {
                   onChange={handleChange}
                   placeholder="Enter product name"
                   className="w-full px-3 py-2 bg-[#F0F0F0] border border-transparent rounded-md focus:border-[#99582A] focus:bg-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="short_description" className="block text-sm font-medium text-[#333333]">Short Description</label>
+                <textarea
+                  id="short_description"
+                  value={product.short_description}
+                  onChange={handleChange}
+                  placeholder="Describe your product..."
+                  className="w-full px-3 py-2 bg-[#F0F0F0] border border-transparent rounded-md focus:border-[#99582A] focus:bg-white min-h-20"
                 />
               </div>
 

@@ -85,17 +85,21 @@ export function CheckoutPage({ onNavigate }) {
   const [mpesaCode, setMpesaCode] = useState('');
   const { session } = useAuth();
 
-  const removeItem = async (itemId) => {
-    const cartId = cart.id
-    await deleteCartItem(cartId, itemId)
-    await refreshCart();
+  const handleRemoveItem = async (itemId) => {
+    await removeItem(itemId);
   };
 
-  const { cartItemCount, cart, refreshCart, clearCartItems } = useCart()
+  const { cartItemCount, cart, refreshCart, clearCartItems, addItem, removeItem, isGuest } = useCart()
 
+  // Redirect guests to login when trying to checkout
   useEffect(() => {
-    refreshCart()
-  }, [cartItemCount])
+    if (isGuest) {
+      toast.error("Please log in to proceed with checkout");
+      navigate('/login');
+      return;
+    }
+    refreshCart();
+  }, [isGuest, cartItemCount])
 
   const cartItems = cart?.items ?? [];
 
@@ -104,7 +108,7 @@ export function CheckoutPage({ onNavigate }) {
     0
   );
   const shipping = shippingMethod === 'standard' ? 0 : 500;
-  const tax = subtotal * 0.08;
+  const tax = 0;
   const total = subtotal + shipping + tax;
 
   const handlePlaceOrder = async () => {
@@ -135,17 +139,16 @@ export function CheckoutPage({ onNavigate }) {
         items: cartItems.map(item => ({
           product_id: item.product.id,
           quantity: item.quantity,
-          name: item.product.name,
-          image: item.product.main_image,
           price: item.product.price,
-          container: item.container || null
+          size: item.size || null,
+          color: item.color || null
         }))
       };
 
       const order = await createOrder(orderData);
       await clearCartItems(); // Clear the cart after successful order
       toast.success("Order placed successfully!");
-      navigate('/confirmOrder', { state : {orderNumber: order.id, total:order.total_amount, payment:order.payOnDelivery} });
+      navigate('/confirmOrder', { state: { orderNumber: order.id, total: order.total_amount, payment: order.payOnDelivery } });
     } catch (error) {
       console.error(error);
     }
@@ -428,7 +431,7 @@ export function CheckoutPage({ onNavigate }) {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Tax</span>
-                <span className="text-[#2C2C2C]">ksh {tax.toFixed(2)}</span>
+                <span className="text-[#2C2C2C]">ksh 0</span>
               </div>
               <div className="flex justify-between pt-3 border-t border-gray-200">
                 <span className="text-[#2C2C2C] font-semibold">Total</span>

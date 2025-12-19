@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Star, Heart, ShoppingCart, Truck, Shield } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Truck, Shield, X } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import { mockProducts, mockReviews } from '../data/mockData';
 import { Link, useLoaderData, useParams } from 'react-router';
 import api from '../hooks/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import { quickAddToWishlist } from '../hooks/services';
+import { quickAddToWishlist, createReview, getUserBySupabaseId, getReviewsForProduct } from '../hooks/services';
 import { useAuth } from '../authResource/useAuth';
 import { toast } from 'sonner';
 
@@ -50,6 +50,100 @@ const Button = ({ children, className, onClick }) => (
   </button>
 );
 
+// Review Modal Component
+const ReviewModal = ({ isOpen, onClose, onSubmit, productId }) => {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!comment.trim()) {
+      toast.error('Please write a review comment');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit({ productId, rating, comment });
+      setRating(5);
+      setComment('');
+      onClose();
+    } catch (error) {
+      console.error('Error submitting review:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-[#2C2C2C]">Write a Review</h3>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-[#2C2C2C] mb-2">Rating</label>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="p-1"
+                >
+                  <Star
+                    className={`w-6 h-6 ${star <= rating ? 'fill-[#99582A] text-[#99582A]' : 'text-gray-300'
+                      }`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="comment" className="block text-sm font-medium text-[#2C2C2C] mb-2">
+              Your Review
+            </label>
+            <textarea
+              id="comment"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Share your thoughts about this product..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#99582A] min-h-[100px] resize-none"
+              required
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-[#99582A] hover:bg-[#99582A]/90 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Review'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 
 export function ProductDetailPage({ onNavigate, onAddToCart }) {
   const { productId } = useParams()
@@ -59,13 +153,44 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedPackaging, setSelectedPackaging] = useState("paper");
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
 
   const relatedProducts = useMemo(() => mockProducts.filter(p => p.id !== product.id).slice(0, 4), [product]);
+
+  // Calculate average rating from reviews
+  const averageRating = useMemo(() => {
+    if (reviews.length === 0) return product.rating || 0;
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return sum / reviews.length;
+  }, [reviews, product.rating]);
+
+  const reviewCount = reviews.length;
 
   useEffect(() => {
     // Scroll to top when productId changes
     window.scrollTo(0, 0);
   }, [productId]);
+
+  useEffect(() => {
+    async function fetchReviews() {
+      if (product?.id) {
+        try {
+          setReviewsLoading(true);
+          const reviewsData = await getReviewsForProduct(product.id);
+          setReviews(reviewsData);
+        } catch (error) {
+          console.error('Error fetching reviews:', error);
+          setReviews([]);
+        } finally {
+          setReviewsLoading(false);
+        }
+      }
+    }
+
+    fetchReviews();
+  }, [product?.id]);
 
 
   const { refreshCart, addItem } = useCart();
@@ -93,6 +218,35 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
     } else {
       await addToWishlist(id);
       toast.success("added to wishlist")
+    }
+  };
+
+  const handleSubmitReview = async ({ productId, rating, comment }) => {
+    if (!session?.user?.id) {
+      toast.error("Please log in to write a review");
+      return;
+    }
+
+    try {
+      // Get the database user ID
+      const dbUser = await getUserBySupabaseId(session.user.id);
+
+      const reviewData = {
+        product_id: productId,
+        user_id: dbUser.id,
+        rating: rating,
+        comment: comment
+      };
+
+      await createReview(reviewData);
+      toast.success("Review submitted successfully!");
+
+      // Refresh reviews
+      const updatedReviews = await getReviewsForProduct(productId);
+      setReviews(updatedReviews);
+    } catch (error) {
+      toast.error("Failed to submit review");
+      throw error;
     }
   };
 
@@ -142,10 +296,10 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
           <div className="flex items-center gap-3 mb-4">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`w-5 h-5 ${i < Math.floor(product.rating) ? 'fill-[#99582A] text-[#99582A]' : 'text-gray-300'}`} />
+                <Star key={i} className={`w-5 h-5 ${i < Math.floor(averageRating) ? 'fill-[#99582A] text-[#99582A]' : 'text-gray-300'}`} />
               ))}
             </div>
-            <span className="text-sm text-muted-foreground">{product.rating} ({product.reviewCount} reviews)</span>
+            <span className="text-sm text-muted-foreground">{averageRating.toFixed(1)} ({reviewCount} reviews)</span>
           </div>
 
           {/* Price */}
@@ -156,7 +310,7 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
             )}
           </div>
 
-          <p className='mb-6 text-sm'>{product.description}</p>
+          <p className='mb-6 text-sm'>{product.short_description}</p>
 
           {/* Packaging selector */}
           <div className="mb-6">
@@ -219,7 +373,7 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
               value="reviews"
               className="rounded-none p-1 w-full border"
             >
-              Reviews ({mockReviews.length})
+              Reviews ({reviewCount})
             </TabsTrigger>
           </TabsList>
           <TabsContent value="description" className="mt-6">
@@ -239,12 +393,12 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
               {/* Rating Summary */}
               <div className="flex items-start justify-center gap-8 pb-6 border-b border-gray-400">
                 <div className="flex flex-col items-center">
-                  <div className="mb-2 text-[#99582A]">Product rating: {product.rating}</div>
+                  <div className="mb-2 text-[#99582A]">Product rating: {averageRating.toFixed(1)}</div>
                   <div className="flex mb-2">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-4 h-4 ${i < Math.floor(product.rating)
+                        className={`w-4 h-4 ${i < Math.floor(averageRating)
                           ? 'fill-[#99582A] text-[#99582A]'
                           : 'text-gray-300'
                           }`}
@@ -252,34 +406,49 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
                     ))}
                   </div>
                   <p className="text-sm text-muted-foreground text-gray-500">
-                    Based on {product.reviewCount} reviews
+                    Based on {reviewCount} reviews
                   </p>
                 </div>
-                <Button className="bg-[#99582A] p-5 rounded-xl hover:bg-[#99582A]/90">
+                <Button
+                  onClick={() => setIsReviewModalOpen(true)}
+                  className="bg-[#99582A] p-5 rounded-xl hover:bg-[#99582A]/90"
+                >
                   Write a Review
                 </Button>
               </div>
 
               {/* Reviews List */}
-              {mockReviews.map(review => (
-                <div key={review.id} className="pb-6 border-b border-gray-400 last:border-0">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[#2C2C2C]">{review.author}</span>
-                        {review.verified && <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Verified Purchase</span>}
-                      </div>
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-[#99582A] text-[#99582A]' : 'text-gray-300'}`} />
-                        ))}
-                      </div>
-                    </div>
-                    <span className="text-sm text-muted-foreground">{review.date}</span>
-                  </div>
-                  <p className="text-[#2C2C2C]/80">{review.text}</p>
+              {reviewsLoading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Loading reviews...</p>
                 </div>
-              ))}
+              ) : reviews.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No reviews yet. Be the first to write a review!</p>
+                </div>
+              ) : (
+                reviews.map(review => (
+                  <div key={review.id} className="pb-6 border-b border-gray-400 last:border-0">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[#2C2C2C]">{review.user?.firstName} {review.user?.lastName}</span>
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Verified Purchase</span>
+                        </div>
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-[#99582A] text-[#99582A]' : 'text-gray-300'}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(review.created_at || Date.now()).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-[#2C2C2C]/80">{review.comment}</p>
+                  </div>
+                ))
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -299,6 +468,14 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
           ))} */}
         </div>
       </section>
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        onSubmit={handleSubmitReview}
+        productId={product.id}
+      />
     </div>
   );
 }

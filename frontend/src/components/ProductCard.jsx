@@ -38,28 +38,27 @@ const Badge = ({ children, className = '', ...props }) => (
 );
 
 export function ProductCard({ product, onProductClick, onAddToCart }) {
-  const { refreshCart, addItem } = useCart();
+  const { refreshCart, addItem, isGuest } = useCart();
   const { session } = useAuth()
   const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-  const handleAddToCart = async (id) => {
-    const userId = session.user.id
-    await quickAddToCart(id, userId);
-    await refreshCart();
-    toast.success("added to cart")
+  const handleAddToCart = async () => {
+    if (isGuest) {
+      addItem(product, 100); // Default quantity 100 (grams)
+      toast.success("Added to cart");
+    } else {
+      await addItem(product, 100);
+      toast.success("Added to cart");
+    }
   };
 
-  const handleToggleWishlist = async (id) => {
-    if (isInWishlist(id)) {
-      // Find the item id
-      const item = wishlist?.items?.find(item => item.product.id === id);
-      if (item) {
-        await removeFromWishlist(item.id);
-        toast.success("removed from wishlist")
-      }
+  const handleToggleWishlist = async () => {
+    if (isInWishlist(product.id)) {
+      await removeFromWishlist(product.id);
+      toast.success("Removed from wishlist");
     } else {
-      await addToWishlist(id);
-      toast.success("added to wishlist")
+      await addToWishlist(product);
+      toast.success("Added to wishlist");
     }
   };
 
@@ -97,7 +96,7 @@ export function ProductCard({ product, onProductClick, onAddToCart }) {
         {/* Quick Actions (Heart) - Appears on Hover */}
         <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:translate-x-0">
           <Button
-            onClick={() => handleToggleWishlist(product.id)}
+            onClick={handleToggleWishlist}
             size="icon"
             // Heart Button: Using light background with Primary Accent text for elegance
             className="w-9 h-9 bg-[#FEFAE0] hover:bg-[#DDA15E] text-[#BC6C25] shadow-lg rounded-full transition-all duration-200 "
@@ -115,9 +114,7 @@ export function ProductCard({ product, onProductClick, onAddToCart }) {
         {/* Add to Cart - Main Dopamine Inducing CTA */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/10 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out">
           <Button
-            onClick={() => {
-              handleAddToCart(product.id)
-            }}
+            onClick={handleAddToCart}
             // CTA Button: Primary Accent Color for high conversion
             className="w-full bg-[#BC6C25] hover:bg-[#DDA15E] text-[#FEFAE0] font-bold tracking-wider shadow-xl transition-all duration-200 hover:scale-[1.02]"
           >
