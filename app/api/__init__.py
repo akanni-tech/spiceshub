@@ -10,6 +10,9 @@ from .shipping import router as shipping_router
 from .guest_cart import router as guest_cart_router
 from .guest_wishlist_routes import router as guest_wishlist_router
 from .category import router as category_router
+from .meal import router as meal_router
+from .health import router as health_router
+from .sale import router as sale_router
 
 api_router = APIRouter()
 
@@ -24,3 +27,6 @@ api_router.include_router(shipping_router, prefix="/shippingAddresses", tags=["A
 api_router.include_router(guest_cart_router, prefix="/guest", tags=["Guest Cart"])
 api_router.include_router(guest_wishlist_router, prefix="/guest", tags=["Guest Wishlist"])
 api_router.include_router(category_router, prefix="/category", tags=["Categories"])
+api_router.include_router(meal_router, prefix="/meals", tags=["Meals"])
+api_router.include_router(health_router, prefix="/health", tags=["Health"])
+api_router.include_router(sale_router, prefix="/sales", tags=["Sales"])

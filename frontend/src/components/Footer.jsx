@@ -12,7 +12,7 @@ export function Footer() {
               <div className="w-10 h-10 bg-[#99582A] rounded flex items-center justify-center">
                 <span className="text-white font-bold">SH</span>
               </div>
-              <span className="text-white font-semibold">Spice Hub</span>
+              <span className="text-white font-semibold">SpicesHub</span>
             </div>
             <p className="text-sm text-gray-400 mb-4">
               Quality products, exceptional service, delivered to your door.

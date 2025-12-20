@@ -22,6 +22,7 @@ import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
 import { SSOPage } from '../pages/auth/SSOPage'
 import ValuePacksPage from '../pages/ValuePacksPage'
+import SmartShopPage from '../pages/SmartShopPage'
 
 
 const Layout = () => {
@@ -41,6 +42,7 @@ const Layout = () => {
           <Route path='/profile' element={<ProfilePage />} />
           <Route path='/wishlist' element={<WishlistPage />} />
           <Route path='/checkout' element={<CheckoutPage />} />
+          <Route path='/smart-shop' element={<SmartShopPage />} />
           <Route path='/track-order' element={<TrackOrderPage />} />
           <Route path='/product/:productId' element={<ProductDetailPage />} loader={getSingleProduct} />
           <Route path='/confirmOrder' element={<OrderConfirmationPage />} />

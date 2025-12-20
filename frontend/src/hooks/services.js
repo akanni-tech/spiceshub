@@ -2,8 +2,9 @@
 import api from "./api";
 import { getSessionId } from '../utils/session'
 
-export const getProducts = async () => {
-  const response = await api.get("/products/products");
+export const getProducts = async (search = '') => {
+  const params = search ? { search } : {};
+  const response = await api.get("/products/products", { params });
   return response.data;
 };
 
@@ -133,8 +134,93 @@ export const getOrders = async () => {
   return response.data;
 };
 
+// MEAL SERVICES
+export const getMeals = async () => {
+  const response = await api.get("/meals/meals");
+  return response.data;
+};
+
+export const getSingleMeal = async (mealId) => {
+  const response = await api.get(`/meals/meals/${mealId}`);
+  return response.data;
+};
+
+// HEALTH SERVICES
+export const getHealthCategories = async () => {
+  const response = await api.get("/health/health");
+  return response.data;
+};
+
+export const getSingleHealthCategory = async (categoryId) => {
+  const response = await api.get(`/health/health/${categoryId}`);
+  return response.data;
+};
+
+// MEAL CRUD OPERATIONS
+export const createMeal = async (mealData) => {
+  const response = await api.post("/meals/meals", mealData);
+  return response.data;
+};
+
+export const updateMeal = async (mealId, mealData) => {
+  const response = await api.put(`/meals/meals/${mealId}`, mealData);
+  return response.data;
+};
+
+export const deleteMeal = async (mealId) => {
+  const response = await api.delete(`/meals/meals/${mealId}`);
+  return response.data;
+};
+
+// HEALTH CRUD OPERATIONS
+export const createHealthCategory = async (categoryData) => {
+  const response = await api.post("/health/health", categoryData);
+  return response.data;
+};
+
+export const updateHealthCategory = async (categoryId, categoryData) => {
+  const response = await api.put(`/health/health/${categoryId}`, categoryData);
+  return response.data;
+};
+
+export const deleteHealthCategory = async (categoryId) => {
+  const response = await api.delete(`/health/health/${categoryId}`);
+  return response.data;
+};
+
 export const downloadInvoice = async (orderId) => {
   const response = await api.get(`/orders/orders/${orderId}/invoice`);
+  return response.data;
+};
+
+// SALE SERVICES
+export const getSales = async () => {
+  const response = await api.get("/sales/sales");
+  return response.data;
+};
+
+export const getActiveSale = async () => {
+  const response = await api.get("/sales/sales/active");
+  return response.data;
+};
+
+export const getSingleSale = async (saleId) => {
+  const response = await api.get(`/sales/sales/${saleId}`);
+  return response.data;
+};
+
+export const createSale = async (saleData) => {
+  const response = await api.post("/sales/sales", saleData);
+  return response.data;
+};
+
+export const updateSale = async (saleId, saleData) => {
+  const response = await api.put(`/sales/sales/${saleId}`, saleData);
+  return response.data;
+};
+
+export const deleteSale = async (saleId) => {
+  const response = await api.delete(`/sales/sales/${saleId}`);
   return response.data;
 };
 

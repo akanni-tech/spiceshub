@@ -101,6 +101,7 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
   const handleSearch = () => {
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery(''); // Clear search input after search
       setIsSearchOpen(false); // Close mobile search after search
     }
   };
@@ -108,6 +109,7 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
   const navLinks = [
     { name: 'Home', page: '/' },
     { name: 'All Products', page: '/products' },
+    { name: 'Cook by Meal & Health', page: '/smart-shop' },
     { name: 'Value Packs', page: '/value-packs' },
     { name: 'Categories', page: '/category' },
     { name: 'Sale', page: '/sale' },
@@ -139,7 +141,7 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#99582A] rounded flex items-center justify-center transition-transform group-hover:scale-105">
               <span className="text-white font-bold text-lg">SH</span>
             </div>
-            <span className="text-[#99582A] font-extrabold text-xl hidden sm:block">Spice Hub</span>
+            <span className="text-[#99582A] font-extrabold text-xl hidden sm:block">SpicesHub</span>
           </Link>
 
           {/* Search Bar (Desktop Only) */}

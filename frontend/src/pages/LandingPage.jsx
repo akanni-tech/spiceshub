@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, Truck, Shield, RefreshCw, HeadphonesIcon } from 'lucide-react';
+import { ArrowRight, Truck, Shield, RefreshCw, HeadphonesIcon, ChefHat, Heart, Sparkles } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import { mockProducts, categories, testimonials } from '../data/mockData';
 import { getCategories, getProducts } from '../hooks/services';
@@ -8,7 +8,7 @@ import { ProductCardSkeleton } from '../components/ProductCardSkeleton';
 
 // Mock UI components
 const Button = ({ children, className, variant, onClick }) => {
-  let baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDA15E] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+  let baseClasses = 'inline-flex p-2 items-center justify-center rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDA15E] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
 
   if (variant === 'outline') {
     baseClasses += ' border border-[#DDA15E] text-[#BC6C25] hover:bg-[#FEFAE0]/70';
@@ -56,7 +56,7 @@ export function LandingPage({ onNavigate, onAddToCart }) {
   const [categories, setCategories] = useState([])
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  
+
   useEffect(() => {
     async function loadProducts() {
       const data = await getProducts()
@@ -127,6 +127,86 @@ export function LandingPage({ onNavigate, onAddToCart }) {
               <HeadphonesIcon className="w-10 h-10 mx-auto mb-3 text-[#99582A]" />
               <h4 className="mb-2 text-[#2C2C2C]">24/7 Support</h4>
               <p className="text-sm text-gray-600">Dedicated support team</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Cook by Meal & Health Section */}
+      <section className="py-16 bg-gradient-to-r from-[#FFE6A7] to-[#DDA15E]">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <Sparkles className="w-12 h-12 text-[#99582A] mx-auto mb-4" />
+            <h2 className="mb-4 text-[#2C2C2C] text-3xl font-bold">Cook by Meal & Health</h2>
+            <p className="text-gray-700 text-lg max-w-2xl mx-auto">
+              Discover perfect spice combinations for your favorite meals and natural wellness support.
+              Let us guide you to the right spices for cooking or health goals.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            {/* Shop by Meal */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-lg p-8 text-center hover:shadow-lg transition-shadow">
+              <ChefHat className="w-16 h-16 text-[#99582A] mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-[#2C2C2C] mb-3">Shop by Meal</h3>
+              <p className="text-gray-600 mb-6">
+                Get complete spice bundles for authentic recipes. From Pilau to Nyama Choma,
+                find everything you need in one click.
+              </p>
+              <Link to="/smart-shop">
+                <Button
+                  className="bg-[#99582A] hover:bg-[#99582A]/90 text-white"
+                  onClick={() => {
+                    // Optional: Set default tab to meals
+                    sessionStorage.setItem('smartShopTab', 'meals');
+                  }}
+                >
+                  Explore Meal Bundles
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+
+            {/* Shop by Health */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-lg p-8 text-center hover:shadow-lg transition-shadow">
+              <Heart className="w-16 h-16 text-[#99582A] mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-[#2C2C2C] mb-3">Shop by Health</h3>
+              <p className="text-gray-600 mb-6">
+                Natural wellness support with traditional spices. From immunity boosting
+                to digestion support, find your perfect health allies.
+              </p>
+              <Link to="/smart-shop">
+                <Button
+                  className="bg-[#99582A] hover:bg-[#99582A]/90 text-white"
+                  onClick={() => {
+                    // Optional: Set default tab to health
+                    sessionStorage.setItem('smartShopTab', 'health');
+                  }}
+                >
+                  Explore Health Spices
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Smart Recommendation Teaser */}
+          <div className="text-center">
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 max-w-2xl mx-auto">
+              <h3 className="text-lg font-semibold text-[#2C2C2C] mb-2">Not sure what you need?</h3>
+              <p className="text-gray-600 mb-4">
+                Our smart recommendation system can help you discover the perfect spices
+                for your cooking or wellness journey.
+              </p>
+              <Link to="/smart-shop">
+                <Button
+                  variant="outline"
+                  className="border-[#99582A] text-[#99582A] hover:bg-[#99582A] hover:text-white"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Get Smart Recommendations
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

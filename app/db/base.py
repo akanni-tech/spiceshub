@@ -10,3 +10,7 @@ from app.models.cart import Cart, CartItem
 from app.models.wishlist import Wishlist, WishlistItem
 from app.models.review import Review
 from app.models.shipping import ShippingAddress
+from app.models.meal import Meal, MealItem
+from app.models.health import HealthCategory, HealthRecommendation
+from app.models.smart_recommendation import SmartRecommendationRule
+from app.models.sale import Sale, SaleProduct

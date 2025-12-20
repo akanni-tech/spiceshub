@@ -163,13 +163,13 @@ export function CategoryPage({ onNavigate, onAddToCart }) {
 
   useEffect(() => {
     async function loadProducts() {
-      const data = await getProducts()
+      const data = await getProducts(searchQuery)
       setProducts(data)
       setDisplayedProducts(data)
       setLoading(false)
     }
     loadProducts();
-  }, [])
+  }, [searchQuery])
 
   const [allCategories, setAllCategories] = useState([])
 
@@ -214,19 +214,9 @@ export function CategoryPage({ onNavigate, onAddToCart }) {
     setPriceRange({ min, max });
   };
 
-  // Filtering logic
+  // Filtering logic (client-side for category, price, sort)
   useEffect(() => {
     let filtered = [...products];
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((p) =>
-        p.name.toLowerCase().includes(query) ||
-        p.description?.toLowerCase().includes(query) ||
-        p.category?.name.toLowerCase().includes(query)
-      );
-    }
 
     // Filter by category
     if (selectedCategories.length > 0) {
@@ -258,7 +248,7 @@ export function CategoryPage({ onNavigate, onAddToCart }) {
     }
 
     setDisplayedProducts(filtered);
-  }, [products, selectedCategories, priceRange, sortBy, searchQuery]);
+  }, [products, selectedCategories, priceRange, sortBy]);
 
 
   const FilterSidebar = useCallback(() => (
