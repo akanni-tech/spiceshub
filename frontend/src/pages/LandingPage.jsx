@@ -96,13 +96,14 @@ export function LandingPage({ onNavigate, onAddToCart }) {
               Curated collections of premium spices and herbs, sourced for freshness, aroma, and bold flavor.
             </p>
             <div className="flex gap-4">
-              <Button
-                onClick={() => onNavigate('products')}
-                className="bg-[#99582A] p-2 hover:bg-[#99582A]/90"
-              >
-                Shop Now
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
+              <Link to={"/products"}>
+                <Button
+                  className="bg-[#99582A] p-2 hover:bg-[#99582A]/90"
+                >
+                  Shop Now
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

@@ -133,6 +133,11 @@ export const getOrders = async () => {
   return response.data;
 };
 
+export const downloadInvoice = async (orderId) => {
+  const response = await api.get(`/orders/orders/${orderId}/invoice`);
+  return response.data;
+};
+
 // Guest Cart Services (localStorage based)
 export const getGuestCart = () => {
   try {

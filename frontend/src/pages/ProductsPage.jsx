@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { ChevronDown, SlidersHorizontal, ShoppingCart, Heart, X, Check } from 'lucide-react';
+import { useSearchParams } from 'react-router';
 import { ProductCard } from '../components/ProductCard';
 import DualRangeSlider from '../components/Slider';
 import { getCategories, getProducts } from '../hooks/services';
@@ -12,7 +13,7 @@ const cn = (...classes) => classes.filter(Boolean).join(' ');
 // Button Component
 const Button = ({ children, className = '', variant, size, onClick, disabled, ...props }) => {
   let baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DDA15E] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-  
+
   if (size === 'icon') {
     baseClasses += ' w-9 h-9 p-0';
   } else {
@@ -41,9 +42,9 @@ const Button = ({ children, className = '', variant, size, onClick, disabled, ..
 
 // Checkbox Component
 const Checkbox = ({ id, checked, onCheckedChange, disabled, ...props }) => (
-  <input 
-    id={id} 
-    type="checkbox" 
+  <input
+    id={id}
+    type="checkbox"
     checked={checked}
     onChange={(e) => onCheckedChange?.(e.target.checked)}
     disabled={disabled}
@@ -55,8 +56,8 @@ const Checkbox = ({ id, checked, onCheckedChange, disabled, ...props }) => (
 // Select Component
 const NativeSelect = ({ value, onChange, children, className }) => (
   <div className="relative w-full">
-    <select 
-      value={value} 
+    <select
+      value={value}
       onChange={onChange}
       className={cn(
         "appearance-none block w-full h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#DDA15E] focus:border-[#DDA15E] pr-8",
@@ -74,12 +75,12 @@ const SheetContext = React.createContext({});
 
 const Sheet = ({ children }) => {
   const [open, setOpen] = useState(false);
-  
+
   const allChildren = React.Children.toArray(children);
   const triggerElement = allChildren.find(child => child.type === SheetTrigger);
   const contentElement = allChildren.find(child => child.type === SheetContent);
   const contentProps = contentElement ? contentElement.props : {};
-  
+
   return (
     <SheetContext.Provider value={{ open, setOpen }}>
       {triggerElement}
@@ -87,7 +88,7 @@ const Sheet = ({ children }) => {
         open={open}
         setOpen={setOpen}
         side={contentProps.side}
-        children={contentProps.children} 
+        children={contentProps.children}
       />
     </SheetContext.Provider>
   );
@@ -96,7 +97,7 @@ const Sheet = ({ children }) => {
 const SheetTrigger = ({ asChild, children }) => {
   const { setOpen } = React.useContext(SheetContext);
   const triggerElement = asChild ? React.Children.only(children) : <Button>{children}</Button>;
-  
+
   return React.cloneElement(triggerElement, {
     onClick: (e) => {
       e.stopPropagation();
@@ -130,16 +131,16 @@ const SheetDrawer = ({ children, side = 'left', open, setOpen }) => {
   const sheetClass = isVisible ? finalClass : initialClass;
 
   return (
-    <div 
-      className={`fixed inset-0 z-50 transition-opacity duration-300 ${isVisible ? 'bg-black/50 opacity-100' : 'bg-black/0 opacity-0'}`} 
+    <div
+      className={`fixed inset-0 z-50 transition-opacity duration-300 ${isVisible ? 'bg-black/50 opacity-100' : 'bg-black/0 opacity-0'}`}
       onClick={() => setOpen(false)}
     >
-      <div 
+      <div
         className={`fixed inset-y-0 w-3/4 max-w-sm bg-white p-6 shadow-2xl transition-transform duration-300 ease-in-out overflow-y-auto ${side === 'left' ? 'left-0' : 'right-0'} ${sheetClass}`}
         onClick={e => e.stopPropagation()}
       >
-        <button 
-          className="absolute top-4 right-4 text-gray-500 hover:text-[#BC6C25] transition-colors" 
+        <button
+          className="absolute top-4 right-4 text-gray-500 hover:text-[#BC6C25] transition-colors"
           onClick={() => setOpen(false)}
         >
           <X className="w-6 h-6" />
@@ -155,6 +156,8 @@ const SheetTitle = ({ children }) => <h2 className="text-xl font-bold text-[#2C2
 
 // Category Page Component
 export function CategoryPage({ onNavigate, onAddToCart }) {
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -200,7 +203,7 @@ export function CategoryPage({ onNavigate, onAddToCart }) {
         : [...prev, category]
     );
   };
-  
+
   const clearFilters = () => {
     setSelectedCategories([]);
     setPriceRange({ min: PRICE_MIN, max: PRICE_MAX });
@@ -214,6 +217,16 @@ export function CategoryPage({ onNavigate, onAddToCart }) {
   // Filtering logic
   useEffect(() => {
     let filtered = [...products];
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.description?.toLowerCase().includes(query) ||
+        p.category?.name.toLowerCase().includes(query)
+      );
+    }
 
     // Filter by category
     if (selectedCategories.length > 0) {
@@ -245,7 +258,7 @@ export function CategoryPage({ onNavigate, onAddToCart }) {
     }
 
     setDisplayedProducts(filtered);
-  }, [products, selectedCategories, priceRange, sortBy]);
+  }, [products, selectedCategories, priceRange, sortBy, searchQuery]);
 
 
   const FilterSidebar = useCallback(() => (
@@ -253,7 +266,7 @@ export function CategoryPage({ onNavigate, onAddToCart }) {
       {/* Price Filter with Slider */}
       <div>
         <h4 className="mb-5 text-lg font-semibold text-[#2C2C2C]">Price Range</h4>
-        <DualRangeSlider 
+        <DualRangeSlider
           min={PRICE_MIN}
           max={PRICE_MAX}
           initialMin={priceRange.min}
@@ -330,9 +343,9 @@ export function CategoryPage({ onNavigate, onAddToCart }) {
             {/* Sort By */}
             <div className="flex items-center gap-3 ml-auto lg:ml-0">
               <span className="text-sm text-gray-600 font-semibold whitespace-nowrap">Sort by:</span>
-              <NativeSelect 
+              <NativeSelect
                 className="w-full sm:w-[200px]"
-                value={sortBy} 
+                value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
                 <option value="featured">Featured</option>
@@ -349,54 +362,54 @@ export function CategoryPage({ onNavigate, onAddToCart }) {
             {loading ? (
               // 🧱 Show skeletons while loading
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <ProductCardSkeleton key={i} />
-                  ))}
-                </div>
-              ) : displayedProducts.length > 0 ? (
-                // 🛍️ Show actual products once loaded
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {displayedProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onAddToCart={onAddToCart}
-                      onClick={() => onNavigate?.('product', { product })}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <p className="text-lg text-gray-500 mb-4">
-                    No products found matching your criteria.
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="border-[#BC6C25] text-[#BC6C25] hover:bg-[#DDA15E] hover:text-white font-bold"
-                    onClick={clearFilters}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              )}
-            </div>
-
-
-            {/* Pagination */}
-            {displayedProducts.length > 0 && (
-              <div className="flex justify-center gap-2 mt-16">
-                <Button variant="outline" className="text-gray-500 border-gray-300" disabled>
-                  Previous
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : displayedProducts.length > 0 ? (
+              // 🛍️ Show actual products once loaded
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {displayedProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAddToCart={onAddToCart}
+                    onClick={() => onNavigate?.('product', { product })}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <p className="text-lg text-gray-500 mb-4">
+                  No products found matching your criteria.
+                </p>
+                <Button
+                  variant="outline"
+                  className="border-[#BC6C25] text-[#BC6C25] hover:bg-[#DDA15E] hover:text-white font-bold"
+                  onClick={clearFilters}
+                >
+                  Clear Filters
                 </Button>
-                <Button className="bg-[#BC6C25] hover:bg-[#DDA15E] text-white">1</Button>
-                <Button variant="outline">2</Button>
-                <Button variant="outline">3</Button>
-                <Button variant="outline">Next</Button>
               </div>
             )}
           </div>
+
+
+          {/* Pagination */}
+          {displayedProducts.length > 0 && (
+            <div className="flex justify-center gap-2 mt-16">
+              <Button variant="outline" className="text-gray-500 border-gray-300" disabled>
+                Previous
+              </Button>
+              <Button className="bg-[#BC6C25] hover:bg-[#DDA15E] text-white">1</Button>
+              <Button variant="outline">2</Button>
+              <Button variant="outline">3</Button>
+              <Button variant="outline">Next</Button>
+            </div>
+          )}
         </div>
       </div>
+    </div>
   );
 }
 

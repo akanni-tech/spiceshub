@@ -30,6 +30,7 @@ export default function AddCategoryPage({ categoryId, onNavigate, onBack, onSave
     
     if (response) {
       toast.success("Category created")
+      onBack();
     }
 
     // console.log(payload)

@@ -17,4 +17,5 @@ dependencies = [
     "asyncio>=4.0.0",
     "aioredis>=2.0.1",
     "uuid>=1.30",
+    "reportlab>=4.4.3",
 ]

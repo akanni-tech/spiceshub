@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShoppingCart, Search, User, Menu, Heart, X, LogOut } from 'lucide-react';
-import { Link, NavLink } from 'react-router';
+import { Link, NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../authResource/useAuth';
 import { supabase } from '../authResource/supabaseClient';
 
@@ -39,10 +39,13 @@ const Button = ({ children, className = '', variant, size, onClick, ...props }) 
   );
 };
 
-const Input = ({ placeholder, className = '' }) => (
+const Input = ({ placeholder, className = '', value, onChange, onKeyDown }) => (
   <input
     type="text"
     placeholder={placeholder}
+    value={value}
+    onChange={onChange}
+    onKeyDown={onKeyDown}
     className={cn(
       'px-4 py-2 border border-gray-300 rounded-md focus:outline-none',
       className
@@ -74,9 +77,11 @@ const Badge = ({ children, className = '' }) => (
  */
 export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = () => { }, currentPage }) {
   const { session } = useAuth();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   // State to manage the visibility of the mobile search bar
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const handleNavigation = (page) => {
     onNavigate(page);
@@ -93,12 +98,20 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
     handleNavigation('/');
   };
 
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false); // Close mobile search after search
+    }
+  };
+
   const navLinks = [
     { name: 'Home', page: '/' },
     { name: 'All Products', page: '/products' },
     { name: 'Value Packs', page: '/value-packs' },
     { name: 'Categories', page: '/category' },
     { name: 'Sale', page: '/sale' },
+    { name: 'Track Order', page: '/track-order' },
   ];
 
   return (
@@ -135,6 +148,9 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
             <Input
               placeholder="Search spices..."
               className="pl-10 w-full bg-[#F0F0F0] border-0 focus:ring-1 focus:ring-[#99582A]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
 
@@ -250,6 +266,9 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
             <Input
               placeholder="Search products..."
               className="pl-10 w-full bg-[#F0F0F0] border-0 outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
         </div>

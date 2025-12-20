@@ -26,14 +26,15 @@ const Button = ({ children, className, variant, onClick }) => {
   );
 };
 
-const Input = ({ placeholder, className, id, type = "text", value, onChange }) => (
+const Input = ({ placeholder, className, id, type = "text", value, onChange, error }) => (
   <input
     id={id}
     type={type}
     placeholder={placeholder}
     value={value}
     onChange={onChange}
-    className={`px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#99582A] ${className}`}
+    className={`px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#99582A] ${error ? 'border-red-500' : 'border-gray-300'
+      } ${className}`}
   />
 );
 
@@ -83,6 +84,7 @@ export function CheckoutPage({ onNavigate }) {
   });
   const [payOnDelivery, setPayOnDelivery] = useState(false);
   const [mpesaCode, setMpesaCode] = useState('');
+  const [errors, setErrors] = useState({});
   const { session } = useAuth();
 
   const handleRemoveItem = async (itemId) => {
@@ -90,6 +92,25 @@ export function CheckoutPage({ onNavigate }) {
   };
 
   const { cartItemCount, cart, refreshCart, clearCartItems, addItem, removeItem, isGuest } = useCart()
+
+  // Validation functions
+  const validateStep1 = () => {
+    const newErrors = {};
+    if (!formData.city.trim()) newErrors.city = 'City is required';
+    if (!formData.area.trim()) newErrors.area = 'Area is required';
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep3 = () => {
+    const newErrors = {};
+    if (!payOnDelivery && !mpesaCode.trim()) {
+      newErrors.mpesaCode = 'Mpesa code is required when not paying on delivery';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Redirect guests to login when trying to checkout
   useEffect(() => {
@@ -215,11 +236,19 @@ export function CheckoutPage({ onNavigate }) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="city">City / County</Label>
-                      <Input id="city" placeholder="Nairobi" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+                      <Input id="city" placeholder="Nairobi" value={formData.city} onChange={(e) => {
+                        setFormData({ ...formData, city: e.target.value });
+                        if (errors.city) setErrors({ ...errors, city: '' });
+                      }} error={errors.city} />
+                      {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
                     </div>
                     <div>
                       <Label htmlFor="area">Area</Label>
-                      <Input id="area" placeholder="Kilimani" value={formData.area} onChange={(e) => setFormData({ ...formData, area: e.target.value })} />
+                      <Input id="area" placeholder="Kilimani" value={formData.area} onChange={(e) => {
+                        setFormData({ ...formData, area: e.target.value });
+                        if (errors.area) setErrors({ ...errors, area: '' });
+                      }} error={errors.area} />
+                      {errors.area && <p className="text-red-500 text-sm mt-1">{errors.area}</p>}
                     </div>
                     <div className="">
                       <Label htmlFor="address">Address (optional)</Label>
@@ -227,7 +256,11 @@ export function CheckoutPage({ onNavigate }) {
                     </div>
                     <div>
                       <Label htmlFor="phone">Phone</Label>
-                      <Input id="phone" type="tel" placeholder="(254)7XX XXX XXX" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                      <Input id="phone" type="tel" placeholder="(254)7XX XXX XXX" value={formData.phone} onChange={(e) => {
+                        setFormData({ ...formData, phone: e.target.value });
+                        if (errors.phone) setErrors({ ...errors, phone: '' });
+                      }} error={errors.phone} />
+                      {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor="apartment">Apartment, suite, etc. (optional)</Label>
@@ -241,7 +274,11 @@ export function CheckoutPage({ onNavigate }) {
                 </div>
 
                 <Button
-                  onClick={() => setStep(2)}
+                  onClick={() => {
+                    if (validateStep1()) {
+                      setStep(2);
+                    }
+                  }}
                   className="w-full p-3 bg-[#99582A] hover:bg-[#99582A]/90"
                 >
                   Continue to Shipping
@@ -344,12 +381,17 @@ export function CheckoutPage({ onNavigate }) {
                         id="mpesaCode"
                         placeholder="Mpesa code"
                         value={mpesaCode}
-                        onChange={(e) => setMpesaCode(e.target.value)}
+                        onChange={(e) => {
+                          setMpesaCode(e.target.value);
+                          if (errors.mpesaCode) setErrors({ ...errors, mpesaCode: '' });
+                        }}
                         disabled={payOnDelivery}
+                        error={errors.mpesaCode}
                       />
                       <button className='p-2 bg-[#99582A] text-white mx-3 rounded-sm'>Submit</button>
                       <Smartphone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
                     </div>
+                    {errors.mpesaCode && <p className="text-red-500 text-sm mt-1">{errors.mpesaCode}</p>}
                   </div>
 
                   <div className="pt-4 border-t border-gray-200">
@@ -372,7 +414,11 @@ export function CheckoutPage({ onNavigate }) {
                     Back
                   </Button>
                   <Button
-                    onClick={handlePlaceOrder}
+                    onClick={() => {
+                      if (validateStep3()) {
+                        handlePlaceOrder();
+                      }
+                    }}
                     className="flex-1 p-3 bg-[#99582A] hover:bg-[#99582A]/90"
                   >
                     Place Order
