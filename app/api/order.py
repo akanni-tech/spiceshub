@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
@@ -273,3 +273,65 @@ async def get_category_sales(db: AsyncSession = Depends(get_db)):
     category_list.sort(key=lambda x: x["value"], reverse=True)
 
     return category_list
+
+
+# GENERATE INVOICE
+@router.get("/{order_id}/invoice")
+async def generate_invoice(order_id: str, db: AsyncSession = Depends(get_db)):
+    # Get order with items
+    result = await db.execute(
+        select(Order).where(Order.id == order_id).options(selectinload(Order.items).selectinload(OrderItem.product))
+    )
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Create invoice text content
+    shipping_cost = 500 if order.shipping_method == 'express' else 0
+    subtotal = sum(item.quantity * item.price / 100 for item in order.items)
+    total = subtotal + shipping_cost
+
+    invoice_content = f"""
+SPICE HUB - INVOICE
+{'='*50}
+
+Order ID: {order.id}
+Date: {order.created_at.strftime("%Y-%m-%d %H:%M:%S")}
+Status: {order.status.title()}
+
+SHIPPING ADDRESS:
+City: {order.city}
+Area: {order.area}
+Address: {order.address or 'N/A'}
+Phone: {order.phoneNumber}
+
+ORDER ITEMS:
+{'-'*50}
+"""
+
+    for item in order.items:
+        quantity = item.quantity / 100  # Convert from stored format
+        unit_price = item.price
+        item_total = quantity * unit_price
+        invoice_content += f"{item.name}\n"
+        invoice_content += f"  Quantity: {quantity} x Ksh {unit_price:.2f} = Ksh {item_total:.2f}\n\n"
+
+    invoice_content += f"""
+{'-'*50}
+Subtotal: Ksh {subtotal:.2f}
+Shipping: Ksh {shipping_cost:.2f}
+TOTAL: Ksh {total:.2f}
+
+Payment Method: {'Pay on Delivery' if order.payOnDelivery else 'M-Pesa'}
+"""
+
+    if order.mpesaCode:
+        invoice_content += f"M-Pesa Code: {order.mpesaCode}\n"
+
+    invoice_content += "\nThank you for shopping with Spice Hub!\n"
+
+    return Response(
+        content=invoice_content.strip(),
+        media_type="text/plain",
+        headers={"Content-Disposition": f"attachment; filename=invoice-{order.id}.txt"}
+    )

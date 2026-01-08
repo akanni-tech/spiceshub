@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from typing import List
 
 from app.db.session import get_db
-from app.models.product import Product, ProductImage
+from app.models.product import Product, ProductImage, Category
 from app.schemas.productSchema import ProductCreate, ProductRead, ProductImageCreate, ProductUpdate
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -62,16 +62,23 @@ async def create_product(
 
 # GET ALL PRODUCTS
 @router.get("/", response_model=List[ProductRead])
-async def list_products(db: AsyncSession = Depends(get_db)):
-  result = await db.execute(
-    select(Product)
-    .options(
-      # selectinload(Product.images),
-      selectinload(Product.category)
-    )
-  )
-  products = result.scalars().all()
-  return products
+async def list_products(search: str = None, db: AsyncSession = Depends(get_db)):
+   query = select(Product).options(
+       # selectinload(Product.images),
+       selectinload(Product.category)
+   )
+
+   if search:
+       search_term = f"%{search.lower()}%"
+       query = query.where(
+           (Product.name.ilike(search_term)) |
+           (Product.description.ilike(search_term)) |
+           (Product.category.has(Category.name.ilike(search_term)))
+       )
+
+   result = await db.execute(query)
+   products = result.scalars().all()
+   return products
 
 
 # GET SINGLE PRODUCT

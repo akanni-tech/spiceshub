@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShoppingCart, Search, User, Menu, Heart, X, LogOut } from 'lucide-react';
-import { Link, NavLink } from 'react-router';
+import { Link, NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../authResource/useAuth';
 import { supabase } from '../authResource/supabaseClient';
 
@@ -39,10 +39,13 @@ const Button = ({ children, className = '', variant, size, onClick, ...props }) 
   );
 };
 
-const Input = ({ placeholder, className = '' }) => (
+const Input = ({ placeholder, className = '', value, onChange, onKeyDown }) => (
   <input
     type="text"
     placeholder={placeholder}
+    value={value}
+    onChange={onChange}
+    onKeyDown={onKeyDown}
     className={cn(
       'px-4 py-2 border border-gray-300 rounded-md focus:outline-none',
       className
@@ -74,9 +77,11 @@ const Badge = ({ children, className = '' }) => (
  */
 export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = () => { }, currentPage }) {
   const { session } = useAuth();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   // State to manage the visibility of the mobile search bar
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const handleNavigation = (page) => {
     onNavigate(page);
@@ -93,12 +98,22 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
     handleNavigation('/');
   };
 
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery(''); // Clear search input after search
+      setIsSearchOpen(false); // Close mobile search after search
+    }
+  };
+
   const navLinks = [
     { name: 'Home', page: '/' },
     { name: 'All Products', page: '/products' },
+    { name: 'Cook by Meal & Health', page: '/smart-shop' },
     { name: 'Value Packs', page: '/value-packs' },
     { name: 'Categories', page: '/category' },
     { name: 'Sale', page: '/sale' },
+    { name: 'Track Order', page: '/track-order' },
   ];
 
   return (
@@ -106,7 +121,7 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
       {/* Top Bar */}
       <div className="bg-[#FFE6A7] py-2 px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
-          <p className="text-[#2C2C2C] hidden sm:block">Free Shipping in CDB and Kasarani</p>
+          <p className="text-[#2C2C2C] hidden sm:block">Fast shipping: between 1-12hrs</p>
           <div className="flex gap-4">
             <button className="text-[#2C2C2C] hover:text-[#99582A] transition-colors">
               Track Order
@@ -126,7 +141,7 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#99582A] rounded flex items-center justify-center transition-transform group-hover:scale-105">
               <span className="text-white font-bold text-lg">SH</span>
             </div>
-            <span className="text-[#99582A] font-extrabold text-xl hidden sm:block">Spice Hub</span>
+            <span className="text-[#99582A] font-extrabold text-xl hidden sm:block">SpicesHub</span>
           </Link>
 
           {/* Search Bar (Desktop Only) */}
@@ -135,6 +150,9 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
             <Input
               placeholder="Search spices..."
               className="pl-10 w-full bg-[#F0F0F0] border-0 focus:ring-1 focus:ring-[#99582A]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
 
@@ -250,6 +268,9 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
             <Input
               placeholder="Search products..."
               className="pl-10 w-full bg-[#F0F0F0] border-0 outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
         </div>

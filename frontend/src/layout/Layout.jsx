@@ -13,6 +13,7 @@ import ScrollToTop from '../components/ScrollToTop'
 import MainLayout from './MainLayout'
 import { getCartItems, getSingleProduct, getSingleCategory } from '../hooks/services'
 import CheckoutPage from '../pages/CheckoutPage'
+import TrackOrderPage from '../pages/TrackOrderPage'
 import AdminSidebar from '../admin/AdminSidebar'
 import OrderConfirmationPage from '../pages/OrderConfirmationPage'
 import { SignUpPage } from '../pages/auth/SignUpPage'
@@ -21,15 +22,16 @@ import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
 import { SSOPage } from '../pages/auth/SSOPage'
 import ValuePacksPage from '../pages/ValuePacksPage'
+import SmartShopPage from '../pages/SmartShopPage'
 
 
 const Layout = () => {
-  
+
 
   const router = createBrowserRouter(
     createRoutesFromElements(
       <>
-        <Route path="/" element = {<MainLayout />}>
+        <Route path="/" element={<MainLayout />}>
           <Route index element={<LandingPage />} />
           <Route path='/cart' element={<CartPage />} />
           <Route path='/products' element={<CategoryPage />} />
@@ -40,6 +42,8 @@ const Layout = () => {
           <Route path='/profile' element={<ProfilePage />} />
           <Route path='/wishlist' element={<WishlistPage />} />
           <Route path='/checkout' element={<CheckoutPage />} />
+          <Route path='/smart-shop' element={<SmartShopPage />} />
+          <Route path='/track-order' element={<TrackOrderPage />} />
           <Route path='/product/:productId' element={<ProductDetailPage />} loader={getSingleProduct} />
           <Route path='/confirmOrder' element={<OrderConfirmationPage />} />
         </Route>

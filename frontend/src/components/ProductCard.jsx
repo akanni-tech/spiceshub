@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShoppingCart, Heart, Maximize } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShoppingCart, Heart, Maximize, X, Star, Eye } from 'lucide-react';
 import { Link } from 'react-router';
 import { quickAddToCart, quickAddToWishlist } from '../hooks/services';
 import { useCart } from '../context/CartContext';
@@ -40,7 +40,9 @@ const Badge = ({ children, className = '', ...props }) => (
 export function ProductCard({ product, onProductClick, onAddToCart }) {
   const { refreshCart, addItem, isGuest } = useCart();
   const { session } = useAuth()
+  const [selectedImage, setSelectedImage] = useState(0);
   const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const [showModal, setShowModal] = useState(false);
 
   const handleAddToCart = async () => {
     if (isGuest) {
@@ -60,6 +62,10 @@ export function ProductCard({ product, onProductClick, onAddToCart }) {
       await addToWishlist(product);
       toast.success("Added to wishlist");
     }
+  };
+
+  const handleMaximize = () => {
+    setShowModal(true);
   };
 
 
@@ -104,6 +110,7 @@ export function ProductCard({ product, onProductClick, onAddToCart }) {
             <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
           </Button>
           <Button
+            onClick={handleMaximize}
             size="icon"
             className="w-9 h-9 bg-[#FEFAE0] hover:bg-[#DDA15E] text-[#BC6C25] shadow-lg rounded-full transition-all duration-200 hover:scale-110"
           >
@@ -155,16 +162,144 @@ export function ProductCard({ product, onProductClick, onAddToCart }) {
           {/* Price */}
           <div className="flex items-center gap-2">
             <span className="text-xl font-bold text-[#BC6C25]">
-              Ksh {product.price.toFixed(2)}
+              Ksh {(product.salePrice || product.price)?.toFixed(2) || '0.00'}
             </span>
-            {product.originalPrice && (
+            {(product.originalPrice || (product.salePrice && product.price !== product.salePrice)) && (
               <span className="text-sm text-gray-500 line-through opacity-75">
-                {product.originalPrice.toFixed(2)}
+                Ksh {(product.originalPrice || product.price)?.toFixed(2) || '0.00'}
               </span>
             )}
           </div>
         </div>
       </Link>
+
+      {/* Product Quick View Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-2xl font-bold text-[#2C2C2C]">Quick View</h2>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Product Image */}
+                <div>
+                  <div className="mb-4 rounded-lg overflow-hidden bg-[#F0F0F0] aspect-square">
+                    <img
+                      src={product.images[selectedImage]}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {product.images && product.images.map((img, idx) => (
+                      <button key={idx} onClick={() => setSelectedImage(idx)}
+                        className={`rounded-lg overflow-hidden aspect-square ${selectedImage === idx ? 'ring-2 ring-[#99582A]' : ''}`}>
+                        <img src={img} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Product Details */}
+                <div className="space-y-4 ">
+                  {/* Product Name */}
+                  <h3 className="text-2xl font-bold text-[#2C2C2C]">{product.name}</h3>
+
+                  {/* Category */}
+                  <div className="flex items-center gap-2">
+                    <span className='text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded'>
+                      {product.category?.name || 'Category'}
+                    </span>
+                  </div>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < Math.floor(product.rating || 0)
+                            ? 'text-[#DDA15E] fill-current'
+                            : 'text-gray-300'
+                            }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      ({product.reviewCount || 0} reviews)
+                    </span>
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-[#BC6C25]">
+                      Ksh {(product.salePrice || product.price)?.toFixed(2) || '0.00'}
+                    </span>
+                    {(product.originalPrice || (product.salePrice && product.price !== product.salePrice)) && (
+                      <span className="text-lg text-gray-500 line-through">
+                        Ksh {(product.originalPrice || product.price)?.toFixed(2) || '0.00'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Short Description */}
+                  <div>
+                    <h4 className="font-semibold text-[#2C2C2C] mb-2">Description</h4>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {product.short_description || 'No description available.'}
+                    </p>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex gap-2">
+                    {product.isNew && (
+                      <Badge className="bg-[#BC6C25] text-[#FEFAE0] font-bold">
+                        New
+                      </Badge>
+                    )}
+                    {product.isSale && (
+                      <Badge className="bg-red-600 text-white font-bold">
+                        Sale
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      onClick={() => {
+                        handleAddToCart();
+                        setShowModal(false);
+                      }}
+                      className="flex-1 bg-[#BC6C25] hover:bg-[#DDA15E] text-white"
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Add to Cart
+                    </Button>
+                    <Link to={`/product/${product.id}`} className="flex-1">
+                      <Button
+                        onClick={() => setShowModal(false)}
+                        className="w-full border border-[#BC6C25] text-[#BC6C25] hover:bg-[#FEFAE0]"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Details
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

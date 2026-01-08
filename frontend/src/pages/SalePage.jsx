@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Tag, Clock, TrendingDown, ChevronDown } from 'lucide-react';
 import { mockProducts } from '../data/mockData';
 import { ProductCard } from '../components/ProductCard';
-import { getProducts } from '../hooks/services';
+import { getProducts, getActiveSale } from '../hooks/services';
 import { ProductCardSkeleton } from '../components/ProductCardSkeleton';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
 const NativeSelect = ({ value, onChange, children, className }) => (
   <div className="relative w-full">
-    <select 
-      value={value} 
+    <select
+      value={value}
       onChange={onChange}
       className={cn(
         "appearance-none block w-full h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#DDA15E] focus:border-[#DDA15E] pr-8",
@@ -27,17 +27,66 @@ function SalePage({ onNavigate, onAddToCart, onToggleWishlist, isInWishlist }) {
   const [sortBy, setSortBy] = useState('discount');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-      
+  const [activeSale, setActiveSale] = useState(null);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
   useEffect(() => {
-    async function loadProducts() {
-      const data = await getProducts()
-      setProducts(data)
-      setLoading(false)
+    async function loadData() {
+      try {
+        const [productsData, saleData] = await Promise.all([
+          getProducts(),
+          getActiveSale().catch(() => null) // Handle case where no active sale exists
+        ]);
+        setProducts(productsData);
+        setActiveSale(saleData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
     }
-    loadProducts();
+    loadData();
   }, [])
 
-  const saleProducts = products.filter(p => p.isSale);
+  // Countdown timer effect
+  useEffect(() => {
+    if (!activeSale) return;
+
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const endTime = new Date(activeSale.end_date).getTime();
+      const difference = endTime - now;
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        // Optionally refresh to check for new active sale
+        setTimeout(() => {
+          getActiveSale().then(setActiveSale).catch(() => setActiveSale(null));
+        }, 5000); // Check every 5 seconds when sale ends
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [activeSale]);
+
+  // Get sale products from active sale
+  const saleProducts = activeSale
+    ? activeSale.products.map(sp => ({
+      ...products.find(p => p.id === sp.product_id),
+      salePrice: sp.discounted_price,
+      originalPrice: products.find(p => p.id === sp.product_id)?.price
+    })).filter(Boolean)
+    : [];
 
   // Calculate savings
   const totalSavings = saleProducts.reduce((sum, product) => {
@@ -65,7 +114,7 @@ function SalePage({ onNavigate, onAddToCart, onToggleWishlist, isInWishlist }) {
     }
   });
 
-  
+
 
   return (
     <div>
@@ -76,27 +125,34 @@ function SalePage({ onNavigate, onAddToCart, onToggleWishlist, isInWishlist }) {
             <Tag className="w-4 h-4" />
             <span className="text-sm">Limited Time Offer</span>
           </div>
-          <h1 className="mb-4 text-white">Sale Event</h1>
+          <h1 className="mb-4 text-white">
+            {activeSale ? activeSale.name : 'Sale Event'}
+          </h1>
           <p className="text-white/90 max-w-2xl mx-auto mb-8">
-            Save big on your favorite items. Up to 50% off selected products.
+            {activeSale?.description || 'Save big on your favorite items. Amazing discounts on selected products.'}
           </p>
 
           {/* Countdown Timer */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-lg">
-            <Clock className="w-5 h-5" />
-            <span>Sale ends in:</span>
-            <div className="flex gap-2 ml-2">
-              <div className="bg-white/20 px-3 py-1 rounded">
-                <span>2d</span>
-              </div>
-              <div className="bg-white/20 px-3 py-1 rounded">
-                <span>14h</span>
-              </div>
-              <div className="bg-white/20 px-3 py-1 rounded">
-                <span>32m</span>
+          {activeSale && (
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-lg">
+              <Clock className="w-5 h-5" />
+              <span>Sale ends in:</span>
+              <div className="flex gap-2 ml-2">
+                <div className="bg-white/20 px-3 py-1 rounded">
+                  <span>{timeLeft.days}d</span>
+                </div>
+                <div className="bg-white/20 px-3 py-1 rounded">
+                  <span>{timeLeft.hours}h</span>
+                </div>
+                <div className="bg-white/20 px-3 py-1 rounded">
+                  <span>{timeLeft.minutes}m</span>
+                </div>
+                <div className="bg-white/20 px-3 py-1 rounded">
+                  <span>{timeLeft.seconds}s</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -105,7 +161,9 @@ function SalePage({ onNavigate, onAddToCart, onToggleWishlist, isInWishlist }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-[#FFE6A7] rounded-lg p-6 text-center">
             <TrendingDown className="w-8 h-8 mx-auto mb-3 text-[#99582A]" />
-            <div className="mb-1 text-[#99582A]">Up to 50% Off</div>
+            <div className="mb-1 text-[#99582A]">
+              {activeSale ? `Up to ${activeSale.discount_percentage}% Off` : 'Up to 50% Off'}
+            </div>
             <p className="text-sm text-[#2C2C2C]/80">Maximum discount</p>
           </div>
           <div className="bg-[#FFE6A7] rounded-lg p-6 text-center">
@@ -168,14 +226,14 @@ function SalePage({ onNavigate, onAddToCart, onToggleWishlist, isInWishlist }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {loading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))
+              <ProductCardSkeleton key={i} />
+            ))
             : sortedProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                />
-              ))}
+              <ProductCard
+                key={product.id}
+                product={product}
+              />
+            ))}
         </div>
 
 

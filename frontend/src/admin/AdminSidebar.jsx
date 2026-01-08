@@ -1,4 +1,4 @@
-import { Bell, Box, ChartLine, Cog, LayoutDashboard, LogOut, PanelLeft, Search, ShoppingCart, User, Users, DollarSign, Package, Tag } from 'lucide-react';
+import { Bell, Box, ChartLine, Cog, LayoutDashboard, LogOut, PanelLeft, Search, ShoppingCart, User, Users, DollarSign, Package, Tag, ChefHat, Heart } from 'lucide-react';
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 import { useNavigate } from 'react-router';
@@ -14,6 +14,9 @@ import { TopProducts } from './components/TopProducts';
 import { useAdminData } from './hooks/useAdminData';
 import { aggregateOrdersByMonth, calculateTotalRevenue, getRecentFiveOrdersSummary } from './hooks/helpers';
 import { AdminCategories } from './AdminCategories';
+import AdminMeals from './AdminMeals';
+import AdminHealth from './AdminHealth';
+import AdminSales from './AdminSales';
 
 
 
@@ -48,9 +51,9 @@ const useSidebar = () => {
 };
 
 // Sidebar Provider Component
-const SidebarProvider = ({ 
-  defaultOpen = true, 
-  children, 
+const SidebarProvider = ({
+  defaultOpen = true,
+  children,
   className = '',
   style = {}
 }) => {
@@ -113,10 +116,10 @@ const SidebarProvider = ({
 };
 
 // Main Sidebar Component
-const Sidebar = ({ 
-  side = "left", 
-  className = '', 
-  children 
+const Sidebar = ({
+  side = "left",
+  className = '',
+  children
 }) => {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
 
@@ -125,21 +128,21 @@ const Sidebar = ({
       <>
         {/* Mobile Overlay */}
         {openMobile && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-40"
             onClick={() => setOpenMobile(false)}
           />
         )}
-        
+
         {/* Mobile Sidebar */}
         <div
           className={cn(
             "fixed inset-y-0 z-50 bg-white shadow-xl transition-transform duration-300 ease-in-out w-72",
             side === "left" ? "left-0" : "right-0",
-            openMobile 
-              ? "translate-x-0" 
-              : side === "left" 
-                ? "-translate-x-full" 
+            openMobile
+              ? "translate-x-0"
+              : side === "left"
+                ? "-translate-x-full"
                 : "translate-x-full"
           )}
         >
@@ -163,7 +166,7 @@ const Sidebar = ({
           state === "collapsed" ? "w-17" : "w-64"
         )}
       />
-      
+
       {/* Sidebar Container */}
       <div
         className={cn(
@@ -212,9 +215,9 @@ const SidebarHeader = ({ className = '', children }) => {
 // Sidebar Content
 const SidebarContent = ({ className = '', children }) => {
   const { state } = useSidebar();
-  
+
   return (
-    <div 
+    <div
       className={cn(
         "flex-1 p-2",
         state === "collapsed" && "overflow-hidden",
@@ -254,7 +257,7 @@ const SidebarMenuItem = ({ className = '', children }) => {
 };
 
 // Sidebar Menu Button
-const SidebarMenuButton = ({ 
+const SidebarMenuButton = ({
   isActive = false,
   icon,
   tooltip,
@@ -266,39 +269,39 @@ const SidebarMenuButton = ({
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
-  <div className="relative group mb-2">
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-md p-2 text-left text-sm transition-colors",
-        "hover:bg-gray-200",
-        isActive && "bg-red-300 font-medium text-black",
-        state === "collapsed" && "justify-center",
-        className
-      )}
-    >
-      {icon && <span className="flex-shrink-0 text-[#99582A]">{icon}</span>}
-      {state === "expanded" && (
-        <span className="truncate">{children}</span>
-      )}
-    </button>
-    
-    {/* Tooltip for collapsed state - using portal approach */}
-    {state === "collapsed" && showTooltip && tooltip && (
-      <div 
-        className="fixed bg-[#99582A] text-white text-xs px-2 py-1 rounded whitespace-nowrap z-[9999] pointer-events-none"
-        style={{
-          left: `calc(var(--sidebar-width-icon) + 0.5rem)`,
-          top: `${document.querySelector('.group:hover')?.getBoundingClientRect().top + window.scrollY + 8}px`
-        }}
+    <div className="relative group mb-2">
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        className={cn(
+          "flex w-full items-center gap-3 rounded-md p-2 text-left text-sm transition-colors",
+          "hover:bg-gray-200",
+          isActive && "bg-red-300 font-medium text-black",
+          state === "collapsed" && "justify-center",
+          className
+        )}
       >
-        {tooltip}
-      </div>
-    )}
-  </div>
-);
+        {icon && <span className="flex-shrink-0 text-[#99582A]">{icon}</span>}
+        {state === "expanded" && (
+          <span className="truncate">{children}</span>
+        )}
+      </button>
+
+      {/* Tooltip for collapsed state - using portal approach */}
+      {state === "collapsed" && showTooltip && tooltip && (
+        <div
+          className="fixed bg-[#99582A] text-white text-xs px-2 py-1 rounded whitespace-nowrap z-[9999] pointer-events-none"
+          style={{
+            left: `calc(var(--sidebar-width-icon) + 0.5rem)`,
+            top: `${document.querySelector('.group:hover')?.getBoundingClientRect().top + window.scrollY + 8}px`
+          }}
+        >
+          {tooltip}
+        </div>
+      )}
+    </div>
+  );
 };
 
 // Sidebar Group
@@ -313,9 +316,9 @@ const SidebarGroup = ({ className = '', children }) => {
 // Sidebar Group Label
 const SidebarGroupLabel = ({ className = '', children }) => {
   const { state } = useSidebar();
-  
+
   return (
-    <div 
+    <div
       className={cn(
         "text-xs font-semibold text-gray-500 px-2 py-1 transition-opacity",
         state === "collapsed" && "opacity-0",
@@ -329,39 +332,54 @@ const SidebarGroupLabel = ({ className = '', children }) => {
 
 let Menuitems = [
   {
-    Title : "Dashboard",
-    itemName : "dashboard",
-    icon : <LayoutDashboard className='h-7 w-7'/>
+    Title: "Dashboard",
+    itemName: "dashboard",
+    icon: <LayoutDashboard className='h-7 w-7' />
   },
   {
-    Title : "Orders",
-    itemName : "orders",
-    icon : <ShoppingCart className='h-7 w-7'/>
+    Title: "Orders",
+    itemName: "orders",
+    icon: <ShoppingCart className='h-7 w-7' />
   },
   {
-    Title : "Products",
-    itemName : "products",
-    icon : <Box className='h-7 w-7'/>
+    Title: "Products",
+    itemName: "products",
+    icon: <Box className='h-7 w-7' />
   },
   {
-    Title : "Customers",
-    itemName : "customers",
-    icon : <Users className='h-7 w-7'/>
+    Title: "Meals",
+    itemName: "meals",
+    icon: <ChefHat className='h-7 w-7' />
   },
   {
-    Title : "Categories",
-    itemName : "categories",
-    icon : <Tag className='h-7 w-7'/>
+    Title: "Health",
+    itemName: "health",
+    icon: <Heart className='h-7 w-7' />
   },
   {
-    Title : "Analytics",
-    itemName : "analytics",
-    icon : <ChartLine className='h-7 w-7'/>
+    Title: "Sales",
+    itemName: "sales",
+    icon: <Tag className='h-7 w-7' />
   },
   {
-    Title : "Settings",
-    itemName : "settings",
-    icon : <Cog className='h-7 w-7'/>
+    Title: "Customers",
+    itemName: "customers",
+    icon: <Users className='h-7 w-7' />
+  },
+  {
+    Title: "Categories",
+    itemName: "categories",
+    icon: <Tag className='h-7 w-7' />
+  },
+  {
+    Title: "Analytics",
+    itemName: "analytics",
+    icon: <ChartLine className='h-7 w-7' />
+  },
+  {
+    Title: "Settings",
+    itemName: "settings",
+    icon: <Cog className='h-7 w-7' />
   }
 ]
 
@@ -405,7 +423,7 @@ const AdminSidebar = () => {
   const { products, categories, orders, users, loading, error, topProducts } = useAdminData();
 
   const signOut = async () => {
-    const {error} = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
     if (error) throw error;
     navigate("/login");
   }
@@ -433,9 +451,9 @@ const AdminSidebar = () => {
         </SidebarHeader>
 
         {/* ✅ The new component takes over the rendering logic */}
-        <SidebarContentWithFeatures 
-          activePage={activePage} 
-          setActivePage={setActivePage} 
+        <SidebarContentWithFeatures
+          activePage={activePage}
+          setActivePage={setActivePage}
         />
 
         <SidebarFooter>
@@ -460,8 +478,8 @@ const AdminSidebar = () => {
             <div className="hidden md:flex flex-1 max-w-md mx-8">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input 
-                  placeholder="Search orders, products, customers..." 
+                <input
+                  placeholder="Search orders, products, customers..."
                   className="pl-10 pr-4 py-2 w-full border border-gray-400 rounded-lg focus:ring-[#AD2E24] focus:border-[#AD2E24] outline-none transition-shadow"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 />
@@ -505,7 +523,7 @@ const AdminSidebar = () => {
                 />
                 <StatsCard
                   title="Total Orders"
-                  value= {`${totalOrders}`}
+                  value={`${totalOrders}`}
                   changeType="positive"
                   icon={ShoppingCart}
                 />
@@ -542,6 +560,9 @@ const AdminSidebar = () => {
           )}
           {activePage === "orders" && <OrdersPage />}
           {activePage === "products" && <ProductsPage />}
+          {activePage === "meals" && <AdminMeals />}
+          {activePage === "health" && <AdminHealth />}
+          {activePage === "sales" && <AdminSales />}
           {activePage === "customers" && <CustomersPage />}
           {activePage === "categories" && <AdminCategories />}
           {activePage === "analytics" && <AnalyticsPage />}

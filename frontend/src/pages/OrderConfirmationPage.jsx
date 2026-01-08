@@ -4,10 +4,10 @@ import { useCart } from '../context/CartContext';
 import { Link, useLocation } from 'react-router';
 
 function OrderConfirmationPage() {
-  const {cartItemCount, cart, refreshCart} = useCart()
-  const {state} = useLocation()
-  const {orderNumber, total, payment} = state || {};
-  
+  const { cartItemCount, cart, refreshCart } = useCart()
+  const { state } = useLocation()
+  const { orderNumber, total, payment } = state || {};
+
   useEffect(() => {
     refreshCart()
   }, [cartItemCount])
@@ -123,12 +123,13 @@ function OrderConfirmationPage() {
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <button
-          onClick={() => onNavigate('account')}
-          className="flex-1 px-4 py-2 bg-[#99582A] text-white rounded hover:bg-[#99582A]/90"
-        >
-          Track Your Order
-        </button>
+        <Link to={`/track-order?orderId=${orderNumber}`}>
+          <button
+            className="flex-1 px-4 py-2 bg-[#99582A] text-white rounded hover:bg-[#99582A]/90"
+          >
+            Track Your Order
+          </button>
+        </Link>
         <Link to={"/products"}>
           <button
             onClick={() => onNavigate('home')}
