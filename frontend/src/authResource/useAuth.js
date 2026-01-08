@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
-import { addUser } from '../hooks/services';
+import { addUser, getUserBySupabaseId } from '../hooks/services';
 
 export function useAuth() {
   const [session, setSession] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(true);
 
   // Function to ensure user exists in database
   const ensureUserInDatabase = async (user) => {
@@ -34,8 +35,19 @@ export function useAuth() {
       setSession(session);
       if (session?.user) {
         await ensureUserInDatabase(session.user);
+        try {
+          const dbUser = await getUserBySupabaseId(session.user.id);
+          setUserRole(dbUser.role);
+        } catch (error) {
+          console.error('Error fetching user role:', error);
+          setUserRole('USER');
+        } finally {
+          setRoleLoading(false);
+        }
       }
       setIsLoading(false);
+      setRoleLoading(false);
+      setRoleLoading(false);
     });
 
     // Real-time Session Listener
@@ -44,6 +56,18 @@ export function useAuth() {
         setSession(session);
         if (session?.user) {
           await ensureUserInDatabase(session.user);
+          try {
+            const dbUser = await getUserBySupabaseId(session.user.id);
+            setUserRole(dbUser.role);
+          } catch (error) {
+            console.error('Error fetching user role:', error);
+            setUserRole('USER');
+          } finally {
+            setRoleLoading(false);
+          }
+        } else {
+          setUserRole(null);
+          setRoleLoading(false);
         }
         setIsLoading(false);
       }
@@ -53,17 +77,6 @@ export function useAuth() {
   }, []);
 
 
-  // Role Extraction 
-  useEffect(() => {
-    if (session) {
-      // Read role from metadata
-      const currentRole = session.user?.user_metadata?.role;
-      setUserRole(currentRole || 'student');
-    } else {
-      // Clear role on logout
-      setUserRole(null);
-    }
-  }, [session])
 
-  return { session, userRole, isLoading };
+  return { session, userRole, isLoading, roleLoading };
 }

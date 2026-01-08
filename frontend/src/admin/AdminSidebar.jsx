@@ -2,6 +2,7 @@ import { Bell, Box, ChartLine, Cog, LayoutDashboard, LogOut, PanelLeft, Search, 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 import { useNavigate } from 'react-router';
+import { useAuth } from '../authResource/useAuth';
 import { AnalyticsPage } from './AnalyticsPage';
 import { OrdersPage } from './OrdersPage';
 import { CustomersPage } from './CustomersPage';
@@ -420,7 +421,14 @@ const SidebarContentWithFeatures = ({ activePage, setActivePage }) => {
 const AdminSidebar = () => {
   const [activePage, setActivePage] = useState('dashboard');
   const navigate = useNavigate()
+  const { userRole } = useAuth();
   const { products, categories, orders, users, loading, error, topProducts } = useAdminData();
+
+  useEffect(() => {
+    if (userRole && userRole !== 'ADMIN') {
+      navigate('/');
+    }
+  }, [userRole, navigate]);
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();

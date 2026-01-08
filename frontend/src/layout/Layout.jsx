@@ -23,6 +23,7 @@ import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
 import { SSOPage } from '../pages/auth/SSOPage'
 import ValuePacksPage from '../pages/ValuePacksPage'
 import SmartShopPage from '../pages/SmartShopPage'
+import ProtectedRoute from '../components/ProtectedRoute'
 
 
 const Layout = () => {
@@ -48,7 +49,7 @@ const Layout = () => {
           <Route path='/confirmOrder' element={<OrderConfirmationPage />} />
         </Route>
 
-        <Route path='/admin' element={<AdminSidebar />} />
+        <Route path='/adminside' element={<ProtectedRoute requiredRole="ADMIN"><AdminSidebar /></ProtectedRoute>} />
         <Route path='/signup' element={< SignUpPage />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/forgot-password' element={<ForgotPasswordPage />} />
