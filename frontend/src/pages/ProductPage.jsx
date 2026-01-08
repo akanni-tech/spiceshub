@@ -6,7 +6,7 @@ import { Link, useLoaderData, useParams } from 'react-router';
 import api from '../hooks/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import { quickAddToWishlist, createReview, getUserBySupabaseId, getReviewsForProduct } from '../hooks/services';
+import { quickAddToWishlist, createReview, getUserBySupabaseId, getReviewsForProduct, getProducts } from '../hooks/services';
 import { useAuth } from '../authResource/useAuth';
 import { toast } from 'sonner';
 
@@ -156,8 +156,8 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
-
-  const relatedProducts = useMemo(() => mockProducts.filter(p => p.id !== product.id).slice(0, 4), [product]);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [relatedLoading, setRelatedLoading] = useState(true);
 
   // Calculate average rating from reviews
   const averageRating = useMemo(() => {
@@ -191,6 +191,26 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
 
     fetchReviews();
   }, [product?.id]);
+
+  useEffect(() => {
+    async function fetchRelatedProducts() {
+      if (product?.category_id) {
+        try {
+          setRelatedLoading(true);
+          const allProducts = await getProducts();
+          const related = allProducts.filter(p => p.category_id === product.category_id && p.id !== product.id).slice(0, 4);
+          setRelatedProducts(related);
+        } catch (error) {
+          console.error('Error fetching related products:', error);
+          setRelatedProducts([]);
+        } finally {
+          setRelatedLoading(false);
+        }
+      }
+    }
+
+    fetchRelatedProducts();
+  }, [product?.category_id, product?.id]);
 
 
   const { refreshCart, addItem } = useCart();
@@ -456,17 +476,27 @@ export function ProductDetailPage({ onNavigate, onAddToCart }) {
 
       {/* Related Products */}
       <section>
-        {/* <h2 className="mb-8 text-[#2C2C2C]">You Might Also Like</h2> */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {/* {relatedProducts.map(product => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onProductClick={(id) => onNavigate('product', { id })}
-              onAddToCart={onAddToCart}
-            />
-          ))} */}
-        </div>
+        <h2 className="mb-8 text-[#2C2C2C]">You Might Also Like</h2>
+        {relatedLoading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Loading related products...</p>
+          </div>
+        ) : relatedProducts.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No related products found.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {relatedProducts.map(relatedProduct => (
+              <ProductCard
+                key={relatedProduct.id}
+                product={relatedProduct}
+                onProductClick={(id) => onNavigate('product', { id })}
+                onAddToCart={onAddToCart}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Review Modal */}
