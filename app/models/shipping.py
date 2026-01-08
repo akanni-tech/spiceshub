@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, UUID
+from sqlalchemy import Column, Integer, String, ForeignKey, UUID, Text
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 import uuid
@@ -17,6 +17,10 @@ class ShippingAddress(Base):
   country = Column(String, nullable=False)
   city = Column(String, nullable=False)
   area = Column(String, nullable=False)
+  address = Column(String, nullable=True)
+  phone = Column(String, nullable=True)
+  apartment = Column(String, nullable=True)
+  note = Column(Text, nullable=True)
 
   user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
   user = relationship("User", back_populates="shipping_addresses")

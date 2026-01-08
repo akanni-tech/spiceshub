@@ -214,15 +214,15 @@ export function CartPage({ onUpdateQuantity, onRemoveItem, onNavigate }) {
               </div>
               <div className="flex justify-between text-gray-700">
                 <span>Shipping</span>
-                <span className="font-medium">{shipping === 0 ? 'FREE' : `ksh ${(shipping).toFixed(2)}`}</span>
+                <span className="font-medium">{shipping === 0 ? 'Negotiated' : `ksh ${(shipping).toFixed(2)}`}</span>
               </div>
               
               {/* Shipping message */}
-              {shipping === 0 && (
+              {/* {shipping === 0 && (
                 <p className="text-sm text-[#BC6C25] font-medium">
                   You've qualified for free shipping!
                 </p>
-              )}
+              )} */}
               {shipping > 0 && (
                 <p className="text-sm text-gray-500">
                   Add ksh {((5000 - subtotal)).toFixed(2)} more for free shipping

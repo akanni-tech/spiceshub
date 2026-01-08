@@ -121,7 +121,7 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
       {/* Top Bar */}
       <div className="bg-[#FFE6A7] py-2 px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
-          <p className="text-[#2C2C2C] hidden sm:block">Free Shipping in CDB and Kasarani</p>
+          <p className="text-[#2C2C2C] hidden sm:block">Fast shipping: between 1-12hrs</p>
           <div className="flex gap-4">
             <button className="text-[#2C2C2C] hover:text-[#99582A] transition-colors">
               Track Order

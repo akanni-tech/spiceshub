@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CreditCard, Lock, Phone, Smartphone } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { deleteCartItem, getCartItems, createOrder, getUserBySupabaseId } from '../hooks/services';
+import { deleteCartItem, getCartItems, createOrder, getUserBySupabaseId, getUserShipping, createShipping, updateShipping } from '../hooks/services';
 import { Link, useNavigate } from 'react-router';
 import { useAuth } from '../authResource/useAuth';
 import { toast } from 'sonner';
@@ -120,7 +120,25 @@ export function CheckoutPage({ onNavigate }) {
       return;
     }
     refreshCart();
-  }, [isGuest, cartItemCount])
+    if (session?.user?.id) {
+      getUserBySupabaseId(session.user.id).then(dbUser => {
+        if (dbUser) {
+          getUserShipping(dbUser.id).then(data => {
+            if (data) {
+              setFormData({
+                city: data.city || '',
+                area: data.area || '',
+                address: data.address || '',
+                phone: data.phone || '',
+                apartment: data.apartment || '',
+                note: data.note || ''
+              });
+            }
+          }).catch(err => console.error('Error fetching shipping:', err));
+        }
+      }).catch(err => console.error('Error getting user:', err));
+    }
+  }, [isGuest, cartItemCount, session])
 
   const cartItems = cart?.items ?? [];
 
@@ -168,6 +186,29 @@ export function CheckoutPage({ onNavigate }) {
       };
 
       const order = await createOrder(orderData);
+
+      // Save shipping address
+      const shippingData = {
+        user_id: dbUser.id,
+        country: 'Kenya',
+        city: formData.city,
+        area: formData.area,
+        address: formData.address || null,
+        phone: formData.phone,
+        apartment: formData.apartment || null,
+        note: formData.note || null
+      };
+      try {
+        const existingShipping = await getUserShipping(dbUser.id);
+        if (existingShipping) {
+          await updateShipping(existingShipping.id, shippingData);
+        } else {
+          await createShipping(shippingData);
+        }
+      } catch (error) {
+        console.error('Error saving shipping address:', error);
+      }
+
       await clearCartItems(); // Clear the cart after successful order
       toast.success("Order placed successfully!");
       navigate('/confirmOrder', { state: { orderNumber: order.id, total: order.total_amount, payment: order.payOnDelivery } });

@@ -62,6 +62,21 @@ export const getUserBySupabaseId = async (supabaseId) => {
   return response.data;
 }
 
+export const getUserShipping = async (userId) => {
+  const response = await api.get(`/shipping/user/${userId}`);
+  return response.data;
+};
+
+export const createShipping = async (shippingData) => {
+  const response = await api.post(`/shipping/`, shippingData);
+  return response.data;
+};
+
+export const updateShipping = async (id, shippingData) => {
+  const response = await api.put(`/shipping/${id}`, shippingData);
+  return response.data;
+};
+
 export const getUserById = async (userId) => {
   const response = await api.get(`/users/users/${userId}`);
   return response.data;
