@@ -18,7 +18,7 @@ export function useAuth() {
       email: user.email,
       phoneNumber: user.user_metadata?.phoneNumber || user.phone || '',
       supabase_id: user.id,
-      role: user.user_metadata?.role || 'USER'
+      role: user.user_metadata?.role || 'ADMIN',
     };
 
     try {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, Search, User, Menu, Heart, X, LogOut } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, Heart, X, LogOut, Shield } from 'lucide-react';
 import { Link, NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../authResource/useAuth';
 import { supabase } from '../authResource/supabaseClient';
@@ -76,7 +76,7 @@ const Badge = ({ children, className = '' }) => (
  * @param {HeaderProps} props
  */
 export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = () => { }, currentPage }) {
-  const { session } = useAuth();
+  const { session, userRole } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   // State to manage the visibility of the mobile search bar
@@ -201,6 +201,22 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
                 <User className="w-5 h-5" />
               </Button>
             </NavLink>
+            {userRole === 'admin' && (
+              <NavLink to={'/adminside'}
+                className={({ isActive }) =>
+                  isActive ? 'bg-amber-900/50 rounded-lg text-white' : 'text-gray-700'
+                }>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleNavigation('adminside')}
+                  className="hidden sm:flex text-gray-700 hover:bg-gray-100"
+                  title="Admin Panel"
+                >
+                  <Shield className="w-5 h-5" />
+                </Button>
+              </NavLink>
+            )}
             <NavLink to={'/wishlist'}
               className={({ isActive }) =>
                 isActive ? 'bg-amber-900/50 rounded-lg text-white' : 'text-gray-700'
@@ -326,6 +342,16 @@ export function Header({ cartItemCount = 0, wishListItemCount = 0, onNavigate = 
             >
               <Heart className='w-5 h-5' /> Wishlist
             </button>
+            {userRole === 'admin' && (
+              <NavLink to={'/adminside'}>
+                <button
+                  onClick={() => handleNavigation('adminside')}
+                  className="w-full text-left py-2 px-3 flex items-center gap-2 text-[#2C2C2C] hover:bg-[#FFE6A7] rounded transition-colors"
+                >
+                  <Shield className='w-5 h-5' /> Admin Panel
+                </button>
+              </NavLink>
+            )}
             {session && (
               <button
                 onClick={handleLogout}

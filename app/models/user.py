@@ -27,7 +27,7 @@ class User(Base):
     supabase_id = Column(String(255), unique=True, index=True)
     firstName = Column(String(255))
     lastName = Column(String(255))
-    role = Column(Enum(UserRole), default=UserRole.USER)
+    role = Column(Enum(UserRole), default=UserRole.ADMIN)
     email = Column(String, unique=True, index=True)
     phoneNumber = Column(String)
     is_active = Column(Boolean, default=True)

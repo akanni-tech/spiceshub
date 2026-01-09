@@ -425,7 +425,7 @@ const AdminSidebar = () => {
   const { products, categories, orders, users, loading, error, topProducts } = useAdminData();
 
   useEffect(() => {
-    if (userRole && userRole !== 'ADMIN') {
+    if (userRole && userRole !== 'admin') {
       navigate('/');
     }
   }, [userRole, navigate]);

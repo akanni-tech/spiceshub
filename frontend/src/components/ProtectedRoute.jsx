@@ -9,10 +9,10 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     }
 
     if (!session) {
-        return <Navigate to="/login" />;
+        return <Navigate to="/" />;
     }
 
-    if (requiredRole && userRole !== requiredRole) {
+    if (requiredRole && userRole?.toLowerCase() !== requiredRole?.toLowerCase()) {
         return <Navigate to="/" />;
     }
 

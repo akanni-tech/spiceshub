@@ -69,6 +69,7 @@ export function SignUpPage({ onNavigate }) {
           firstname: formData.firstName,
           lastname: formData.lastName,
           phoneNumber: formData.phoneNumber,
+          role: 'ADMIN'
         }
       }
     })

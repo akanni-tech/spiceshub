@@ -49,7 +49,7 @@ const Layout = () => {
           <Route path='/confirmOrder' element={<OrderConfirmationPage />} />
         </Route>
 
-        <Route path='/adminside' element={<ProtectedRoute requiredRole="ADMIN"><AdminSidebar /></ProtectedRoute>} />
+        <Route path='/adminside' element={<ProtectedRoute requiredRole="admin"><AdminSidebar /></ProtectedRoute>} />
         <Route path='/signup' element={< SignUpPage />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/forgot-password' element={<ForgotPasswordPage />} />
